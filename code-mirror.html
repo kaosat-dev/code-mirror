@@ -11,7 +11,7 @@ license that can be found in the LICENSE file.
 <script src="codemirror-3.14/mode/vbscript/vbscript.js"></script>
 <script src="codemirror-3.14/mode/htmlmixed/htmlmixed.js"></script>
 
-<polymer-element name="code-mirror" attributes="value boundValue mode theme tabSize lineNumbers readonly wrap">
+<polymer-element name="code-mirror" attributes="value boundValue mode theme tabSize lineNumbers readonly wrap selection">
   <template>
     <link rel="stylesheet" href="codemirror-3.14/lib/codemirror.css">
     <link href="codemirror-3.14/theme/ambiance.css" rel="stylesheet" />
@@ -53,6 +53,8 @@ license that can be found in the LICENSE file.
 
       readonly: false,
       wrap : true,
+
+      selection: null,
       
       ready: function() {
         this.mirror = CodeMirror(this.shadowRoot, {
@@ -74,6 +76,7 @@ license that can be found in the LICENSE file.
         this.mirror.value = this.value;
         this.mirror.on('change', this.editorChangeAction.bind(this));
         this.mirror.on("blur", this.editorBlurAction.bind(this));
+        this.mirror.on("beforeSelectionChange", this.editorSelectionAction.bind(this));
 
         //this.async(function() {this.refresh(); this.mirror.focus(); }, null, 1000);
       },
@@ -117,6 +120,11 @@ license that can be found in the LICENSE file.
         //this._value = this.editorValue;
         //this.boundValue = this.editorValue;
       },
+      editorSelectionAction: function(inst, selection){
+        //console.log("selection change", selection);
+        var selectedText = this.mirror.doc.getSelection();
+        this.selection = selectedText;
+      }
 
     });
   </script>

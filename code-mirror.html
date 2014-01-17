@@ -11,7 +11,7 @@ license that can be found in the LICENSE file.
 <script src="codemirror-3.14/mode/vbscript/vbscript.js"></script>
 <script src="codemirror-3.14/mode/htmlmixed/htmlmixed.js"></script>
 
-<polymer-element name="code-mirror" attributes="value mode theme tabSize lineNumbers">
+<polymer-element name="code-mirror" attributes="value boundValue mode theme tabSize lineNumbers readonly wrap">
   <template>
     <link rel="stylesheet" href="codemirror-3.14/lib/codemirror.css">
     <link href="codemirror-3.14/theme/ambiance.css" rel="stylesheet" />
@@ -45,18 +45,37 @@ license that can be found in the LICENSE file.
   <script>
     Polymer('code-mirror', {
       value: '',
+      boundValue:null,
       mode: 'htmlmixed',
       theme: 'xq-light',
       tabSize: 2,
       lineNumbers: true,
+
+      readonly: false,
+      wrap : true,
+      
       ready: function() {
         this.mirror = CodeMirror(this.shadowRoot, {
           value: this.value,
           mode: this.mode,
           theme: this.theme,
           tabSize: this.tabSize,
-          lineNumbers: this.lineNumbers
+          lineNumbers: this.lineNumbers,
+        
+          readonly: this.readonly,
+          lineWrapping:this.wrap,
+          cursorScrollMargin:20,
+          autofocus:true //not displayed correctly otherwise
         });
+      },
+      enteredView:function()
+      {
+        this.value = this.textContent;
+        this.mirror.value = this.value;
+        this.mirror.on('change', this.editorChangeAction.bind(this));
+        this.mirror.on("blur", this.editorBlurAction.bind(this));
+
+        //this.async(function() {this.refresh(); this.mirror.focus(); }, null, 1000);
       },
       refresh: function() {
         this.mirror.refresh();
@@ -75,7 +94,30 @@ license that can be found in the LICENSE file.
       },
       lineNumbersChanged: function() {
         this.mirror.setOption('lineNumbers', this.lineNumbers);
-      }
+      },
+      readonlyChanged: function() {
+        this.mirror.setOption('readonly', this.readonly);
+      },
+      wrapChanged: function() {
+        this.mirror.setOption('lineWrapping', this.wrap);
+      },
+      editorChangeAction: function() {
+        this.editorValue = this.mirror.getValue();
+        if(this.value !== this.editorValue)//prevent endless loop for dual databinding
+        {
+          this.value = this.editorValue;
+        }
+        this.boundValue = this.editorValue;
+        this.fire('editor-input', {value: this.editorValue, oldValue: this._value});
+      },
+      editorBlurAction: function(event) {
+        if (this._value !== null && this._value != this.editorValue) {
+          this.fire('editor-change', {value: this.editorValue, oldValue: this._value});
+        }
+        //this._value = this.editorValue;
+        //this.boundValue = this.editorValue;
+      },
+
     });
   </script>
 </polymer-element>

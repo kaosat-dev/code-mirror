@@ -11,7 +11,7 @@ license that can be found in the LICENSE file.
 <script src="codemirror-3.14/mode/vbscript/vbscript.js"></script>
 <script src="codemirror-3.14/mode/htmlmixed/htmlmixed.js"></script>
 
-<polymer-element name="code-mirror" attributes="value boundValue mode theme tabSize lineNumbers readonly wrap selection">
+<polymer-element name="code-mirror" attributes="value boundValue mode theme tabSize lineNumbers readonly wrap selection cursor">
   <template>
     <link rel="stylesheet" href="codemirror-3.14/lib/codemirror.css">
     <link href="codemirror-3.14/theme/ambiance.css" rel="stylesheet" />
@@ -40,6 +40,7 @@ license that can be found in the LICENSE file.
       .CodeMirror {
         height: 100%;
       }
+
     </style>
   </template>
   <script>
@@ -55,6 +56,9 @@ license that can be found in the LICENSE file.
       wrap : true,
 
       selection: null,
+      cursor: null,
+
+      gutters: [ "breakpoints"],
       
       ready: function() {
         this.mirror = CodeMirror(this.shadowRoot, {
@@ -67,7 +71,8 @@ license that can be found in the LICENSE file.
           readonly: this.readonly,
           lineWrapping:this.wrap,
           cursorScrollMargin:20,
-          autofocus:true //not displayed correctly otherwise
+          autofocus:true, //not displayed correctly otherwise 
+          gutters:this.gutters
         });
       },
       enteredView:function()
@@ -76,12 +81,31 @@ license that can be found in the LICENSE file.
         this.mirror.value = this.value;
         this.mirror.on('change', this.editorChangeAction.bind(this));
         this.mirror.on("blur", this.editorBlurAction.bind(this));
-        this.mirror.on("beforeSelectionChange", this.editorSelectionAction.bind(this));
+        this.mirror.on("cursorActivity", this.editorCursorAction.bind(this));
 
-        //this.async(function() {this.refresh(); this.mirror.focus(); }, null, 1000);
       },
       refresh: function() {
         this.mirror.refresh();
+      },
+      markText: function(found, options){
+        var Pos = CodeMirror.Pos;
+        //this.mirror.doc.markText(from: {line, ch}, to: {line, ch}, ?options: object)
+        var style = found ? "CodeMirror-markText" : "CodeMirror-nonmarkText";
+        var marking = this.mirror.markText(found.from, Pos(found.from.line, found.from.ch + 1), {className: style});
+      },
+      addMarker: function(lineNb)
+      {
+        this.mirror.setGutterMarker(lineNb,"breakpoints",makeMarker());
+        function makeMarker() {
+          var marker = document.createElement("div");
+          marker.style.color = "#822";
+          marker.innerHTML = "●";
+          return marker;
+        }
+      },
+      clearMarkers: function()
+      {
+        this.mirror.clearGutter("breakpoints");
       },
       valueChanged: function() {
         this.mirror.setValue(this.value);
@@ -108,7 +132,7 @@ license that can be found in the LICENSE file.
         this.editorValue = this.mirror.getValue();
         if(this.value !== this.editorValue)//prevent endless loop for dual databinding
         {
-          this.value = this.editorValue;
+          //this.value = this.editorValue;
         }
         this.boundValue = this.editorValue;
         this.fire('editor-input', {value: this.editorValue, oldValue: this._value});
@@ -117,13 +141,11 @@ license that can be found in the LICENSE file.
         if (this._value !== null && this._value != this.editorValue) {
           this.fire('editor-change', {value: this.editorValue, oldValue: this._value});
         }
-        //this._value = this.editorValue;
-        //this.boundValue = this.editorValue;
       },
-      editorSelectionAction: function(inst, selection){
-        //console.log("selection change", selection);
+      editorCursorAction: function(){
         var selectedText = this.mirror.doc.getSelection();
         this.selection = selectedText;
+        this.cursor = this.mirror.indexFromPos( this.mirror.doc.getCursor() );
       }
 
     });

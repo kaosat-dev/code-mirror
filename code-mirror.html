@@ -12,7 +12,7 @@ license that can be found in the LICENSE file.
 <script src="codemirror-3.14/mode/vbscript/vbscript.js"></script>
 <script src="codemirror-3.14/mode/htmlmixed/htmlmixed.js"></script>
 
-<polymer-element name="code-mirror" attributes="value boundValue mode theme tabSize lineNumbers readonly wrap selection cursorPos">
+<polymer-element name="code-mirror" attributes="value mode theme tabSize lineNumbers readonly wrap selection cursorPos">
   <template>
     <link rel="stylesheet" href="codemirror-3.14/lib/codemirror.css">
     <link href="codemirror-3.14/theme/ambiance.css" rel="stylesheet" />
@@ -47,7 +47,6 @@ license that can be found in the LICENSE file.
   <script>
     Polymer('code-mirror', {
       value: '',
-      boundValue:null,
       mode: 'htmlmixed',
       theme: 'xq-light',
       tabSize: 2,
@@ -78,12 +77,16 @@ license that can be found in the LICENSE file.
       },
       enteredView:function()
       {
-        this.value = this.textContent;
+        //console.log("text content", this.textContent.trim() );
+        if(this.textContent.trim() !== "")
+        {
+           this.value = this.textContent;
+        }
         this.mirror.value = this.value;
         this.mirror.on('change', this.editorChangeAction.bind(this));
         this.mirror.on("blur", this.editorBlurAction.bind(this));
         this.mirror.on("cursorActivity", this.editorCursorAction.bind(this));
-
+        
       },
       refresh: function() {
         this.mirror.refresh();
@@ -109,7 +112,11 @@ license that can be found in the LICENSE file.
         this.mirror.clearGutter("breakpoints");
       },
       valueChanged: function() {
-        this.mirror.setValue(this.value);
+        var editorValue = this.mirror.getValue();
+        if(this.value !== editorValue)//prevent endless loop for dual databinding
+        {
+          this.mirror.setValue(this.value);
+        }
       },
       modeChanged: function() {
         this.mirror.setOption('mode', this.mode);
@@ -133,9 +140,8 @@ license that can be found in the LICENSE file.
         this.editorValue = this.mirror.getValue();
         if(this.value !== this.editorValue)//prevent endless loop for dual databinding
         {
-          //this.value = this.editorValue;
+          this.value = this.editorValue;
         }
-        this.boundValue = this.editorValue;
         this.fire('editor-input', {value: this.editorValue, oldValue: this._value});
       },
       editorBlurAction: function(event) {

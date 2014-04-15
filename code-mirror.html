@@ -12,7 +12,7 @@ license that can be found in the LICENSE file.
 <script src="codemirror-3.14/mode/vbscript/vbscript.js"></script>
 <script src="codemirror-3.14/mode/htmlmixed/htmlmixed.js"></script>
 
-<polymer-element name="code-mirror" attributes="value mode theme tabSize lineNumbers readonly wrap selection cursorPos">
+<polymer-element name="code-mirror" attributes="value mode theme tabSize lineNumbers readonly wrap selection cursorPos themes">
   <template>
     <link rel="stylesheet" href="codemirror-3.14/lib/codemirror.css">
     <link href="codemirror-3.14/theme/ambiance.css" rel="stylesheet" />
@@ -49,6 +49,7 @@ license that can be found in the LICENSE file.
       value: '',
       mode: 'htmlmixed',
       theme: 'xq-light',
+      themes: null,
       tabSize: 2,
       lineNumbers: true,
 
@@ -74,6 +75,27 @@ license that can be found in the LICENSE file.
           autofocus:true, //not displayed correctly otherwise 
           gutters:this.gutters
         });
+        
+        this.themes = [
+            "ambiance",
+            "ambiance-mobile",
+            "blackboard",
+            "cobalt",
+            "eclipse",
+            "elegant",
+            "erlang-dark",
+            "lesser-dark",
+            "midnight",
+            "monokai",
+            "neat",
+            "night",
+            "rubyblue",
+            "solarized",
+            "twilight",
+            "vibrant-ink",
+            "xq-dark",
+            "xq-light",
+        ]
       },
       enteredView:function()
       {
